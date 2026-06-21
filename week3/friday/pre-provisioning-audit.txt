@@ -1,0 +1,19 @@
+# Pre-provisioning audit findings (KijaniKiosk environment)
+
+# - kk-api user does NOT exist
+# - kk-payments user does NOT exist
+# - kk-logs user does NOT exist
+
+# - kijanikiosk group does NOT exist
+
+# - /opt/kijanikiosk directory does NOT exist
+
+# - UFW firewall tool is NOT installed
+
+# - No kk-* systemd services found
+
+# - No package holds detected
+
+# - /opt/kijanikiosk/shared/logs path does not exist
+
+# NOTE: System is in a clean baseline state for provisioning

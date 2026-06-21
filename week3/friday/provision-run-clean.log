@@ -1,0 +1,90 @@
+Phase 6 complete: run logged as clean
+Starting Phase 7: log rotation setup...
+Logrotate config created
+warning: logrotate in debug mode does nothing except printing debug messages!  Consider using verbose mode (-v) instead if this is not what you want.
+
+reading config file /etc/logrotate.d/kijanikiosk
+Reading state from file: /var/lib/logrotate/status
+Allocating hash table for state file, size 64 entries
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+
+Handling 1 logs
+
+rotating pattern: /opt/kijanikiosk/shared/logs/*.log  after 1 days (3 rotations)
+empty log files are not rotated, old logs are removed
+considering log /opt/kijanikiosk/shared/logs/*.log
+  log /opt/kijanikiosk/shared/logs/*.log does not exist -- skipping
+Creating new state
+Phase 7 complete
+Starting Phase 8: verification...
+ALL CHECKS PASSED
+Phase 6 complete: run logged as clean
+Starting Phase 7: log rotation setup...
+Logrotate config created
+warning: logrotate in debug mode does nothing except printing debug messages!  Consider using verbose mode (-v) instead if this is not what you want.
+
+reading config file /etc/logrotate.d/kijanikiosk
+Reading state from file: /var/lib/logrotate/status
+Allocating hash table for state file, size 64 entries
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+Creating new state
+
+Handling 1 logs
+
+rotating pattern: /opt/kijanikiosk/shared/logs/*.log  after 1 days (3 rotations)
+empty log files are not rotated, old logs are removed
+considering log /opt/kijanikiosk/shared/logs/*.log
+  log /opt/kijanikiosk/shared/logs/*.log does not exist -- skipping
+Creating new state
+Phase 7 complete
+Starting Phase 8: verification...
+ALL CHECKS PASSED
