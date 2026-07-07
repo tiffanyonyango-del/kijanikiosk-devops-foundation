@@ -1,0 +1,56 @@
+[Unit]
+Description=KijaniKiosk {{ service_name }} Service
+After=network.target
+
+[Service]
+Type=simple
+
+User={{ service_user }}
+Group={{ group_name }}
+
+ExecStart=/bin/bash -c "while true; do sleep 60; done"
+
+Restart=always
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+
+ProtectSystem=strict
+ProtectHome=yes
+
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectKernelLogs=yes
+ProtectClock=yes
+ProtectHostname=yes
+
+RestrictSUIDSGID=yes
+RestrictRealtime=yes
+RestrictNamespaces=yes
+
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+
+ProtectProc=invisible
+ProcSubset=pid
+
+RemoveIPC=yes
+
+RestrictAddressFamilies=AF_UNIX
+
+IPAddressDeny=any
+
+DevicePolicy=closed
+
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

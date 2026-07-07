@@ -1,0 +1,13 @@
+base_dir: /opt/kijanikiosk
+
+group_name: kijanikiosk
+
+users:
+  - kk-api
+  - kk-payments
+  - kk-logs
+
+services:
+  - kk-api
+  - kk-payments
+  - kk-logs
