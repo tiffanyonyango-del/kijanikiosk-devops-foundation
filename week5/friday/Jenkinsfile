@@ -3,6 +3,7 @@ pipeline {
         docker {
             image 'node:22.17.1-bookworm'
             reuseNode true
+            args '--network cicd-network'
         }
     }
 
