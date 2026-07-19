@@ -8,9 +8,7 @@ pipeline {
 
     environment {
         APP_DIR = 'week5/friday/app'
-        PACKAGE_NAME = 'week5-demo-app'
-        BASE_VERSION = '1.0.0'
-        NEXUS_URL = 'http://localhost:8081/repository/npm-hosted/'
+        NEXUS_URL = 'http://nexus:8081/repository/npm-hosted/'
         NEXUS_CREDENTIALS = 'nexus-creds'
         ARTIFACT_NAME = 'build-output.tar.gz'
     }
@@ -46,94 +44,86 @@ pipeline {
         }
 
         stage('Verify') {
-
             parallel {
 
                 stage('Test') {
-
                     steps {
-
                         dir(env.APP_DIR) {
-
                             sh 'npm test'
-
                         }
-
                     }
-
                 }
 
                 stage('Security Audit') {
-
                     steps {
-
                         dir(env.APP_DIR) {
-
                             sh 'npm audit --audit-level=high'
-
                         }
-
                     }
-
                 }
 
             }
-
         }
 
         stage('Archive') {
-
             steps {
-
                 dir(env.APP_DIR) {
-
                     sh '''
                     tar -czf ${ARTIFACT_NAME} dist package.json package-lock.json
                     '''
-
                 }
 
                 archiveArtifacts artifacts: '**/build-output.tar.gz',
                                  fingerprint: true
-
             }
-
         }
-                stage('Publish') {
+
+        stage('Publish') {
             steps {
-                script {
-                    env.GIT_SHA = sh(
-                        script: 'git rev-parse --short HEAD',
-                        returnStdout: true
-                    ).trim()
-
-                    env.PACKAGE_VERSION = "${BASE_VERSION}-${env.GIT_SHA}"
-                }
-
                 dir(env.APP_DIR) {
 
-                    sh '''
-                    npm version ${PACKAGE_VERSION} --no-git-tag-version
-                    '''
+                    script {
+
+                        def version = sh(
+                            script: "node -p \"require('./package.json').version\"",
+                            returnStdout: true
+                        ).trim()
+
+                        def sha = sh(
+                            script: "git rev-parse --short HEAD",
+                            returnStdout: true
+                        ).trim()
+
+                        def publishVersion = "${version}-${sha}"
+
+                        sh """
+                        node -e "
+                        const fs=require('fs');
+                        const p=require('./package.json');
+                        p.version='${publishVersion}';
+                        fs.writeFileSync('package.json', JSON.stringify(p,null,2));
+                        "
+                        """
+                    }
 
                     withCredentials([
                         usernamePassword(
-                            credentialsId: "${NEXUS_CREDENTIALS}",
+                            credentialsId: env.NEXUS_CREDENTIALS,
                             usernameVariable: 'NEXUS_USER',
                             passwordVariable: 'NEXUS_PASS'
                         )
                     ]) {
 
                         sh '''
-                        cat > .npmrc <<EOF
-registry=${NEXUS_URL}
-//localhost:8081/repository/npm-hosted/:username=${NEXUS_USER}
-//localhost:8081/repository/npm-hosted/:_password=$(printf "%s" "$NEXUS_PASS" | base64 -w0)
-//localhost:8081/repository/npm-hosted/:email=admin@example.com
-//localhost:8081/repository/npm-hosted/:always-auth=true
+cat > .npmrc <<EOF
+registry=http://nexus:8081/repository/npm-hosted/
+//nexus:8081/repository/npm-hosted/:username=${NEXUS_USER}
+//nexus:8081/repository/npm-hosted/:_password=$(printf "%s" "${NEXUS_PASS}" | base64 -w0)
+//nexus:8081/repository/npm-hosted/:email=jenkins@example.com
+//nexus:8081/repository/npm-hosted/:always-auth=true
 EOF
 
-npm publish
+npm publish --registry=http://nexus:8081/repository/npm-hosted/
 
 rm -f .npmrc
 '''
@@ -147,34 +137,15 @@ rm -f .npmrc
     post {
 
         always {
-
-            junit allowEmptyResults: true,
-                  testResults: '**/junit.xml'
-
             cleanWs()
-
         }
 
         success {
-
-            echo "Build completed successfully."
-
-            echo "Artifact published to: ${NEXUS_URL}"
-
+            echo 'Pipeline completed successfully.'
         }
 
         failure {
-
-            echo "Pipeline failed. Review the failed stage before retrying."
-
+            echo 'Pipeline failed.'
         }
-
-        changed {
-
-            echo "Pipeline status changed compared to the previous build."
-
-        }
-
     }
-
 }
