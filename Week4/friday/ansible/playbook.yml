@@ -1,0 +1,85 @@
+---
+- hosts: all
+  become: yes
+
+  tasks:
+
+    - name: Install required packages
+      apt:
+        name:
+          - ufw
+          - logrotate
+        state: present
+        update_cache: yes
+
+    - name: Create kijanikiosk group
+      group:
+        name: "{{ group_name }}"
+        state: present
+
+    - name: Create application users
+      user:
+        name: "{{ item }}"
+        group: "{{ group_name }}"
+        create_home: yes
+        state: present
+      loop: "{{ users }}"
+
+    - name: Create directory structure
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: "{{ group_name }}"
+        mode: "0750"
+      loop:
+        - "{{ base_dir }}"
+        - "{{ base_dir }}/config"
+        - "{{ base_dir }}/shared"
+        - "{{ base_dir }}/shared/logs"
+        - "{{ base_dir }}/health"
+
+    - name: Install systemd service
+      template:
+        src: kk-service.j2
+        dest: "/etc/systemd/system/{{ service_name }}.service"
+        owner: root
+        group: root
+        mode: "0644"
+      notify:
+        - Reload systemd
+        - Restart Service
+
+    - name: Enable persistent journal
+      file:
+        path: /var/log/journal
+        state: directory
+
+    - name: Configure logrotate
+      copy:
+        dest: /etc/logrotate.d/kijanikiosk
+        content: |
+          /opt/kijanikiosk/shared/logs/*.log {
+              daily
+              rotate 3
+              missingok
+              notifempty
+              compress
+              create 640 kk-logs kijanikiosk
+          }
+
+    - name: Allow SSH
+      community.general.ufw:
+        rule: allow
+        port: "22"
+
+    - name: Allow HTTP
+      community.general.ufw:
+        rule: allow
+        port: "80"
+
+    - name: Enable firewall
+      community.general.ufw:
+        state: enabled
+  handlers:
+    - import_tasks: handlers/main.yml
