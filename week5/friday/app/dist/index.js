@@ -1,3 +1,7 @@
-const { greet } = require("./app");
+const app = require("./app");
 
-console.log(greet("Jenkins"));
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`KijaniKiosk running on port ${PORT}`);
+});

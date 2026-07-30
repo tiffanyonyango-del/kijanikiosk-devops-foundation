@@ -1,9 +1,24 @@
 const fs = require("fs");
+const path = require("path");
 
-if (!fs.existsSync("dist")) {
-  fs.mkdirSync("dist");
+const distDir = "dist";
+
+if (!fs.existsSync(distDir)) {
+  fs.mkdirSync(distDir);
 }
 
-fs.copyFileSync("src/index.js", "dist/index.js");
+const filesToCopy = [
+  "index.js",
+  "app.js"
+];
+
+filesToCopy.forEach(file => {
+  fs.copyFileSync(
+    path.join("src", file),
+    path.join(distDir, file)
+  );
+});
+
+fs.copyFileSync("package.json", "dist/package.json");
 
 console.log("Build completed successfully.");
