@@ -16,7 +16,7 @@
     "express": "^5.2.1"
   },
   "devDependencies": {
-    "eslint": "^8.57.1",
-    "jest": "^30.4.2"
+    "eslint": "^10.8.0",
+    "jest": "^25.0.0"
   }
 }
