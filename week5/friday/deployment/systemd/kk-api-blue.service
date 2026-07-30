@@ -1,0 +1,15 @@
+[Unit]
+Description=KijaniKiosk Blue API
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/kijanikiosk/app
+Environment=PORT=3000
+Environment=APP_VERSION=1.3.0
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
