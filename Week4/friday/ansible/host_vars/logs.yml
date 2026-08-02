@@ -1,0 +1,3 @@
+service_name: kk-logs
+service_user: kk-logs
+service_description: KijaniKiosk Logs Service

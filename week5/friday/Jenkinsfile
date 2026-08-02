@@ -1,0 +1,152 @@
+pipeline {
+    agent {
+        docker {
+            image 'node:22.17.1-bookworm'
+            reuseNode true
+            args '--network cicd-network'
+        }
+    }
+
+    environment {
+        APP_DIR = 'week5/friday/app'
+        NEXUS_URL = 'http://nexus:8081/repository/npm-hosted/'
+        NEXUS_CREDENTIALS = 'nexus-creds'
+        ARTIFACT_NAME = 'build-output.tar.gz'
+    }
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Lint') {
+            steps {
+                dir(env.APP_DIR) {
+                    sh 'npm ci'
+                    sh 'npm run lint'
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                dir(env.APP_DIR) {
+                    sh 'npm run build'
+                }
+            }
+        }
+
+        stage('Verify') {
+            parallel {
+
+                stage('Test') {
+                    steps {
+                        dir(env.APP_DIR) {
+                            sh 'npm test'
+                        }
+                    }
+                }
+
+                stage('Security Audit') {
+                    steps {
+                        dir(env.APP_DIR) {
+                            sh 'npm audit --audit-level=high'
+                        }
+                    }
+                }
+
+            }
+        }
+
+        stage('Archive') {
+            steps {
+                dir(env.APP_DIR) {
+                    sh '''
+                    tar -czf ${ARTIFACT_NAME} dist package.json package-lock.json
+                    '''
+                }
+
+                archiveArtifacts artifacts: '**/build-output.tar.gz',
+                                 fingerprint: true
+            }
+        }
+
+        stage('Publish') {
+            steps {
+                dir(env.APP_DIR) {
+
+                    script {
+
+                        def version = sh(
+                            script: "node -p \"require('./package.json').version\"",
+                            returnStdout: true
+                        ).trim()
+
+                        def sha = sh(
+                            script: "git rev-parse --short HEAD",
+                            returnStdout: true
+                        ).trim()
+
+                        def publishVersion = "${version}-${sha}"
+
+                        sh """
+                        node -e "
+                        const fs=require('fs');
+                        const p=require('./package.json');
+                        p.version='${publishVersion}';
+                        fs.writeFileSync('package.json', JSON.stringify(p,null,2));
+                        "
+                        """
+                    }
+
+                    withCredentials([
+                        usernamePassword(
+                            credentialsId: env.NEXUS_CREDENTIALS,
+                            usernameVariable: 'NEXUS_USER',
+                            passwordVariable: 'NEXUS_PASS'
+                        )
+                    ]) {
+
+                        sh '''
+cat > .npmrc <<EOF
+registry=http://nexus:8081/repository/npm-hosted/
+//nexus:8081/repository/npm-hosted/:username=${NEXUS_USER}
+//nexus:8081/repository/npm-hosted/:_password=$(printf "%s" "${NEXUS_PASS}" | base64 -w0)
+//nexus:8081/repository/npm-hosted/:email=jenkins@example.com
+//nexus:8081/repository/npm-hosted/:always-auth=true
+EOF
+
+npm publish --registry=http://nexus:8081/repository/npm-hosted/
+
+rm -f .npmrc
+'''
+                    }
+                }
+            }
+        }
+
+    }
+
+    post {
+
+        always {
+            cleanWs()
+        }
+
+        success {
+            echo 'Pipeline completed successfully.'
+        }
+
+        failure {
+            echo 'Pipeline failed.'
+        }
+    }
+}

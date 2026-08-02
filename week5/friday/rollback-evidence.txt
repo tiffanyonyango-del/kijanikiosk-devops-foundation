@@ -1,0 +1,27 @@
+=== KijaniKiosk Automated Rollback Evidence ===
+
+Monitor:
+sudo bash /opt/kijanikiosk/scripts/post-deploy-monitor.sh 60
+
+Controlled fault:
+sudo systemctl stop kk-api-green.service
+
+T0=2026-08-01 19:16:47
+T1=2026-08-01 19:17:52 [MONITOR FAIL] ROLLBACK TRIGGERED
+Rollback complete=19:17:54
+T2=2026-08-01 19:18:00
+
+T0-to-T2 duration: 73 seconds
+
+Rollback:
+Automatic; no human intervention occurred between T0 and T2.
+
+Proxy health after rollback:
+{"status":"healthy","version":"1.3.0"}
+
+State after rollback:
+active=blue
+previous=green
+
+Rollback result:
+PASS — traffic automatically returned to blue within 90 seconds.

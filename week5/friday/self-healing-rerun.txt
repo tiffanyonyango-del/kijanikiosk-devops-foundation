@@ -1,0 +1,10 @@
+KijaniKiosk Payments — Kubernetes Self-Healing Evidence
+
+T0: 17:32:25
+Action: Deleted Pod kk-payments-795b48bfb4-bjl2l
+
+Replacement Pod: kk-payments-795b48bfb4-68wtn
+T1: 17:33:22
+Status at T1: 1/1 Running
+
+Self-healing time: 57 seconds
