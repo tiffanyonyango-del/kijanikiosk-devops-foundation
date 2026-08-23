@@ -1,0 +1,98 @@
+pipeline {
+    agent any
+
+    environment {
+        AWS_DEFAULT_REGION = 'af-south-1'
+        AWS_REGION = 'af-south-1'
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm ci'
+            }
+        }
+
+        stage('Validate Handlers') {
+            steps {
+                sh 'npm test'
+            }
+        }
+
+        stage('Validate Serverless Configuration') {
+            steps {
+                sh 'npx serverless print --stage staging --region af-south-1'
+            }
+        }
+
+        stage('Deploy to Staging') {
+            steps {
+                sh '''
+                    npx serverless deploy \
+                      --stage staging \
+                      --region af-south-1
+                '''
+            }
+        }
+
+        stage('Staging Information') {
+            steps {
+                sh '''
+                    npx serverless info \
+                      --stage staging \
+                      --region af-south-1
+                '''
+            }
+        }
+
+        stage('Production Approval') {
+            steps {
+                timeout(time: 30, unit: 'MINUTES') {
+                    input message: 'Staging deployment completed. Approve production deployment?', \
+                          ok: 'Deploy to Production'
+                }
+            }
+        }
+
+        stage('Deploy to Production') {
+            steps {
+                sh '''
+                    npx serverless deploy \
+                      --stage production \
+                      --region af-south-1
+                '''
+            }
+        }
+
+        stage('Production Information') {
+            steps {
+                sh '''
+                    npx serverless info \
+                      --stage production \
+                      --region af-south-1
+                '''
+            }
+        }
+    }
+
+    post {
+        always {
+            echo 'KijaniKiosk serverless pipeline completed.'
+        }
+
+        success {
+            echo 'Serverless deployment pipeline completed successfully.'
+        }
+
+        failure {
+            echo 'Serverless deployment pipeline failed. Review the Jenkins console output.'
+        }
+    }
+}

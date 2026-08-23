@@ -1,0 +1,25 @@
+{
+  "name": "kijani-capstone",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+  "test": "node --check handlers/receipts.js && node --check handlers/processor.js && node --check handlers/notifier.js && node --check handlers/analytics.js",
+  "validate": "serverless print",
+  "package": "serverless package"
+},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "serverless": "^4.41.0",
+    "serverless-offline": "^14.8.0",
+    "serverless-s3-local": "^0.8.5"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1116.0"
+  }
+}

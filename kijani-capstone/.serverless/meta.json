@@ -1,0 +1,172 @@
+{
+  "/home/tiffany/kijanikiosk-devops-foundation/kijani-capstone/serverless.yml": {
+    "versionFramework": "4.41.0",
+    "servicePath": "/home/tiffany/kijanikiosk-devops-foundation/kijani-capstone/serverless.yml",
+    "serviceConfigFileName": "serverless.yml",
+    "service": {
+      "service": "kijani-capstone",
+      "provider": {
+        "name": "aws",
+        "runtime": "nodejs20.x",
+        "stage": "dev",
+        "region": "af-south-1",
+        "environment": {
+          "DEFAULT_CURRENCY": "KES",
+          "PROCESSED_BUCKET": "kijani-payments-processed-dev",
+          "NOTIFICATIONS_BUCKET": "kijani-payments-notifications-dev",
+          "ANALYTICS_BUCKET": "kijani-payments-analytics-dev"
+        },
+        "versionFunctions": true
+      },
+      "plugins": [
+        "serverless-offline",
+        "serverless-s3-local"
+      ],
+      "functions": {
+        "generateReceipt": {
+          "handler": "handlers/receipts.generateReceipt",
+          "events": [
+            {
+              "http": {
+                "path": "receipts",
+                "method": "post"
+              }
+            }
+          ],
+          "name": "kijani-capstone-dev-generateReceipt"
+        },
+        "processReceiptUpload": {
+          "handler": "handlers/receipts.processReceiptUpload",
+          "events": [
+            {
+              "s3": {
+                "bucket": "kijani-payments-receipts-dev",
+                "event": "s3:ObjectCreated:*",
+                "existing": false
+              }
+            }
+          ],
+          "name": "kijani-capstone-dev-processReceiptUpload"
+        },
+        "processReceipt": {
+          "handler": "handlers/processor.processReceipt",
+          "events": [
+            {
+              "s3": {
+                "bucket": "kijani-payments-processed-dev",
+                "event": "s3:ObjectCreated:*",
+                "existing": false
+              }
+            }
+          ],
+          "name": "kijani-capstone-dev-processReceipt"
+        },
+        "notifyReceipt": {
+          "handler": "handlers/notifier.notifyReceipt",
+          "events": [
+            {
+              "s3": {
+                "bucket": "kijani-payments-notifications-dev",
+                "event": "s3:ObjectCreated:*",
+                "existing": false
+              }
+            }
+          ],
+          "name": "kijani-capstone-dev-notifyReceipt"
+        },
+        "analyzeReceipts": {
+          "handler": "handlers/analytics.analyzeReceipts",
+          "events": [
+            {
+              "s3": {
+                "bucket": "kijani-payments-analytics-dev",
+                "event": "s3:ObjectCreated:*",
+                "existing": false
+              }
+            }
+          ],
+          "name": "kijani-capstone-dev-analyzeReceipts"
+        }
+      },
+      "resources": {
+        "Resources": {
+          "ReceiptsBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketName": "kijani-payments-receipts-dev"
+            }
+          },
+          "ProcessedBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketName": "kijani-payments-processed-dev"
+            }
+          },
+          "NotificationsBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketName": "kijani-payments-notifications-dev"
+            }
+          },
+          "AnalyticsBucket": {
+            "Type": "AWS::S3::Bucket",
+            "Properties": {
+              "BucketName": "kijani-payments-analytics-dev"
+            }
+          }
+        }
+      },
+      "custom": {
+        "receiptsBucket": "kijani-payments-receipts-dev",
+        "processedBucket": "kijani-payments-processed-dev",
+        "notificationsBucket": "kijani-payments-notifications-dev",
+        "analyticsBucket": "kijani-payments-analytics-dev",
+        "s3": {
+          "host": "localhost",
+          "port": 4569,
+          "directory": "/tmp/kijani-s3-local",
+          "accessKeyId": "<REDACTED>",
+          "secretAccessKey": "<REDACTED>"
+        }
+      }
+    },
+    "provider": {
+      "name": "aws",
+      "runtime": "nodejs20.x",
+      "stage": "dev",
+      "region": "af-south-1",
+      "environment": {
+        "DEFAULT_CURRENCY": "KES",
+        "PROCESSED_BUCKET": "kijani-payments-processed-dev",
+        "NOTIFICATIONS_BUCKET": "kijani-payments-notifications-dev",
+        "ANALYTICS_BUCKET": "kijani-payments-analytics-dev"
+      },
+      "versionFunctions": true
+    },
+    "dashboard": {
+      "isEnabledForService": false,
+      "requiredAuthentication": false,
+      "orgFeaturesInUse": null,
+      "orgObservabilityIntegrations": null,
+      "serviceAppId": null,
+      "serviceProvider": null,
+      "instanceParameters": null
+    },
+    "serviceRawFile": "service: kijani-capstone\n\nprovider:\n  name: aws\n  runtime: nodejs20.x\n  stage: ${opt:stage, 'dev'}\n  region: ${opt:region, 'af-south-1'}\n  environment:\n    DEFAULT_CURRENCY: KES\n    PROCESSED_BUCKET: ${self:custom.processedBucket}\n    NOTIFICATIONS_BUCKET: ${self:custom.notificationsBucket}\n    ANALYTICS_BUCKET: ${self:custom.analyticsBucket}\nplugins:\n  - serverless-offline\n  - serverless-s3-local\n\nfunctions:\n\n  generateReceipt:\n    handler: handlers/receipts.generateReceipt\n    events:\n      - http:\n          path: receipts\n          method: post\n\n  processReceiptUpload:\n    handler: handlers/receipts.processReceiptUpload\n    events:\n      - s3:\n          bucket: ${self:custom.receiptsBucket}\n          event: s3:ObjectCreated:*\n          existing: false\n\n  processReceipt:\n    handler: handlers/processor.processReceipt\n    events:\n      - s3:\n          bucket: ${self:custom.processedBucket}\n          event: s3:ObjectCreated:*\n          existing: false\n  notifyReceipt:\n    handler: handlers/notifier.notifyReceipt\n    events:\n      - s3:\n          bucket: ${self:custom.notificationsBucket}\n          event: s3:ObjectCreated:*\n          existing: false\n\n  analyzeReceipts:\n    handler: handlers/analytics.analyzeReceipts\n    events:\n      - s3:\n          bucket: ${self:custom.analyticsBucket}\n          event: s3:ObjectCreated:*\n          existing: false\nresources:\n  Resources:\n\n    ReceiptsBucket:\n      Type: AWS::S3::Bucket\n      Properties:\n        BucketName: ${self:custom.receiptsBucket}\n\n    ProcessedBucket:\n      Type: AWS::S3::Bucket\n      Properties:\n        BucketName: ${self:custom.processedBucket}\n\n    NotificationsBucket:\n      Type: AWS::S3::Bucket\n      Properties:\n        BucketName: ${self:custom.notificationsBucket}\n    AnalyticsBucket:\n      Type: AWS::S3::Bucket\n      Properties:\n        BucketName: ${self:custom.analyticsBucket}\ncustom:\n\n  receiptsBucket: kijani-payments-receipts-${self:provider.stage}\n\n  processedBucket: kijani-payments-processed-${self:provider.stage}\n\n  notificationsBucket: kijani-payments-notifications-${self:provider.stage}\n\n  analyticsBucket: kijani-payments-analytics-${self:provider.stage}\n  \n  s3:\n    host: localhost\n    port: 4569\n    directory: /tmp/kijani-s3-local\n    accessKeyId: S3RVER\n    secretAccessKey: S3RVER",
+    "command": [
+      "s3",
+      "start"
+    ],
+    "options": {},
+    "orgId": "6622b6a2-f218-47cf-8403-e59cb83e3196",
+    "orgName": "tiffanyonyango",
+    "userId": "WlNGKns3y75Ym6fl3G",
+    "userName": "tiffany.onyango",
+    "serviceProviderAwsAccountId": "896328676659",
+    "serviceProviderAwsCfStackId": null,
+    "serviceProviderAwsCfStackCreated": null,
+    "serviceProviderAwsCfStackUpdated": null,
+    "serviceProviderAwsCfStackStatus": null,
+    "serviceProviderAwsCfStackOutputs": null
+  }
+}

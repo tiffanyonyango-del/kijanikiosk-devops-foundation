@@ -1,0 +1,92 @@
+service: kijani-capstone
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'af-south-1'}
+  environment:
+    DEFAULT_CURRENCY: KES
+    PROCESSED_BUCKET: ${self:custom.processedBucket}
+    NOTIFICATIONS_BUCKET: ${self:custom.notificationsBucket}
+    ANALYTICS_BUCKET: ${self:custom.analyticsBucket}
+plugins:
+  - serverless-offline
+  
+
+functions:
+
+  generateReceipt:
+    handler: handlers/receipts.generateReceipt
+    events:
+      - http:
+          path: receipts
+          method: post
+
+  processReceiptUpload:
+    handler: handlers/receipts.processReceiptUpload
+    events:
+      - s3:
+          bucket: ${self:custom.receiptsBucket}
+          event: s3:ObjectCreated:*
+          existing: false
+
+  processReceipt:
+    handler: handlers/processor.processReceipt
+    events:
+      - s3:
+          bucket: ${self:custom.processedBucket}
+          event: s3:ObjectCreated:*
+          existing: false
+  notifyReceipt:
+    handler: handlers/notifier.notifyReceipt
+    events:
+      - s3:
+          bucket: ${self:custom.notificationsBucket}
+          event: s3:ObjectCreated:*
+          existing: false
+
+  analyzeReceipts:
+    handler: handlers/analytics.analyzeReceipts
+    events:
+      - s3:
+          bucket: ${self:custom.analyticsBucket}
+          event: s3:ObjectCreated:*
+          existing: false
+resources:
+  Resources:
+
+    ReceiptsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.receiptsBucket}
+
+    ProcessedBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.processedBucket}
+
+    NotificationsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.notificationsBucket}
+    AnalyticsBucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: ${self:custom.analyticsBucket}
+custom:
+
+  receiptsBucket: kijani-payments-receipts-${self:provider.stage}
+
+  processedBucket: kijani-payments-processed-${self:provider.stage}
+
+  notificationsBucket: kijani-payments-notifications-${self:provider.stage}
+
+  analyticsBucket: kijani-payments-analytics-${self:provider.stage}
+  
+  s3:
+    host: localhost
+    port: 4569
+    directory: /tmp/kijani-s3-local
+    accessKeyId: S3RVER
+    secretAccessKey: S3RVER
